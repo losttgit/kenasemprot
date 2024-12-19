@@ -20,10 +20,11 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 db_config = {
-    "host": "localhost",
-    "user": "root",
-    "password": "",
-    "database": "boejangbeans"
+    user="kelompok9", 
+    password="Admin123", 
+    host="webfpkelompok9.mysql.database.azure.com", 
+    port=3306, 
+    database="boejangbeans"
 }
 
 def get_db_connection():
