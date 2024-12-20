@@ -176,51 +176,67 @@ def filter():
 @app.route('/checkout', methods=['GET', 'POST'])
 @login_required
 def checkout():
+    # Mengambil data keranjang pembelian dari session
     cart = session.get('cart', [])
     print("Current Cart:", cart)
+    
+    # Menghitung total harga berdasarkan item di keranjang
     total_price = sum(
         int(item['price']) * item['quantity']
         for item in cart
         if item.get('price') is not None and item.get('quantity') is not None
     )
 
+    # Mengambil data pengguna yang login
     user_name = current_user.username
     user_email = current_user.email
 
+    # Pilihan valid untuk payment_method
+    valid_payment_methods = ['GoPay', 'Dana', 'Kartu Kredit', 'Transfer Bank']
+
     if request.method == 'POST':
         payment_method = request.form['payment_method']
-        print("Payment Method:", payment_method)  # Tambahkan print untuk debug
+        
+        # Pastikan payment_method valid sesuai ENUM
+        if payment_method not in valid_payment_methods:
+            flash('Metode pembayaran tidak valid.', 'danger')
+            return redirect(url_for('checkout'))
+
         address = request.form['address']
         phone_number = request.form['no_hp']
-        
+
+        # Koneksi ke database
         connection = get_db_connection()
         cursor = connection.cursor()
+
+        # Menyimpan data untuk setiap produk yang ada di keranjang
         for product in cart:
-            item_price = float(product['price'])  # Pastikan price adalah float
-            item_quantity = int(product['quantity'])  # Pastikan quantity adalah integer
-            total_item_price = item_price * item_quantity
-            
+            total_item_price = product['price'] * product['quantity']
             cursor.execute("""
                 INSERT INTO purchases (
                     user_id, product_id, quantity, total_price, payment_method, email, address, phone_number
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                current_user.id,         
-                product['id'],            
-                product['quantity'],      
-                total_item_price,         
-                payment_method,           
-                user_email,                
-                address,
-                phone_number
+                current_user.id,         # user_id
+                product['id'],            # product_id
+                product['quantity'],      # quantity
+                total_item_price,         # total_price
+                payment_method,           # payment_method
+                user_email,               # email
+                address,                  # address
+                phone_number              # phone_number
             ))
-            print(f"Inserted Payment Method: {payment_method}")
+
+        # Commit perubahan dan tutup koneksi
         connection.commit()
         cursor.close()
         connection.close()
 
         flash('Pembelian berhasil dilakukan!', 'success')
+
+        # Mengosongkan keranjang setelah pembelian
         session['cart'] = []  
+
         return redirect(url_for('checkout'))
 
     return render_template(
