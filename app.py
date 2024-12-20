@@ -22,7 +22,7 @@ login_manager.login_view = "login"
 db_config = {
     user="kelompok9", 
     password="Admin123", 
-    host="webfpkelompok9.mysql.database.azure.com", 
+    host="fpccrungkad.mysql.database.azure.com", 
     port=3306, 
     database="boejangbeans"
 }
